@@ -10,7 +10,7 @@
     <div id="app">
         <!-- 头部 -->
         <header class="header">
-            <h1>📄 文档扫描器</h1>
+            <h1>文档扫描器</h1>
         </header>
 
         <!-- 主内容区 -->
@@ -21,21 +21,20 @@
                 <div class="video-container">
                     <video id="video" autoplay playsinline></video>
                     <canvas id="overlay"></canvas>
+                    <div id="page-count" class="page-count" style="display:none">已拍 <span id="count-num">0</span> 页</div>
                     <div id="guide-text" class="guide-text">点击拍照按钮扫描文档</div>
                 </div>
 
                 <!-- 控制按钮 -->
                 <div class="controls">
-                    <button id="btn-switch" class="btn btn-secondary">
+                    <button id="btn-switch" class="btn btn-secondary" title="切换摄像头">
                         <span>🔄</span>
-                        <small>切换</small>
                     </button>
-                    <button id="btn-capture" class="btn btn-capture">
+                    <button id="btn-capture" class="btn btn-capture" title="拍照">
                         <span>📷</span>
                     </button>
-                    <button id="btn-gallery" class="btn btn-secondary">
+                    <button id="btn-gallery" class="btn btn-secondary" title="从相册选择">
                         <span>🖼️</span>
-                        <small>相册</small>
                     </button>
                 </div>
             </div>
@@ -46,6 +45,9 @@
                 <div class="result-container">
                     <img id="result-image" src="" alt="扫描结果">
                 </div>
+
+                <!-- 页面缩略图预览 -->
+                <div id="pages-preview" class="pages-preview"></div>
 
                 <!-- 增强模式选择 -->
                 <div class="mode-selector">
@@ -61,18 +63,24 @@
 
                 <!-- 结果操作按钮 -->
                 <div class="controls">
-                    <button id="btn-retake" class="btn btn-secondary">
+                    <button id="btn-continue" class="btn btn-secondary" title="继续拍摄">
+                        <span>➕</span>
+                    </button>
+                    <button id="btn-retake" class="btn btn-secondary" title="重拍当前页">
                         <span>🔄</span>
-                        <small>重拍</small>
                     </button>
-                    <button id="btn-download" class="btn btn-primary">
+                    <button id="btn-download" class="btn btn-primary" title="保存图片">
                         <span>💾</span>
-                        <small>保存</small>
                     </button>
-                    <button id="btn-apply" class="btn btn-primary">
-                        <span>✓</span>
-                        <small>应用滤镜</small>
-                    </button>
+                </div>
+
+                <!-- PDF导出 -->
+                <div class="pdf-controls">
+                    <select id="pdf-order">
+                        <option value="asc">按拍摄顺序 (第1页在前)</option>
+                        <option value="desc">按逆序 (最后拍的在前)</option>
+                    </select>
+                    <button id="btn-export-pdf" class="btn-export">📄 导出PDF (<span id="pdf-page-count">0</span>页)</button>
                 </div>
             </div>
         </main>

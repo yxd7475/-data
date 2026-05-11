@@ -32,6 +32,13 @@ if not os.path.exists(UPLOAD_FOLDER):
 def base64_to_image(base64_str):
     """将 Base64 字符串转换为 OpenCV 图像"""
     try:
+        if not base64_str:
+            print("错误: base64字符串为空")
+            return None
+
+        print(f"base64字符串长度: {len(base64_str)}")
+        print(f"base64前缀: {base64_str[:50] if len(base64_str) > 50 else base64_str}")
+
         # 移除 data:image/jpeg;base64, 前缀
         if ',' in base64_str:
             base64_str = base64_str.split(',')[1]
@@ -41,20 +48,27 @@ def base64_to_image(base64_str):
 
         # 解码
         img_data = base64.b64decode(base64_str)
+        print(f"解码后数据长度: {len(img_data)} bytes")
 
         if len(img_data) == 0:
             print("错误: 解码后的图像数据为空")
             return None
 
         nparr = np.frombuffer(img_data, np.uint8)
+        print(f"numpy数组大小: {len(nparr)}")
+
         image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
         if image is None:
             print("错误: cv2.imdecode 返回 None")
+        else:
+            print(f"图像解码成功: {image.shape}")
 
         return image
     except Exception as e:
         print(f"base64_to_image 错误: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 
@@ -230,6 +244,75 @@ def save_document():
         })
 
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/export-pdf', methods=['POST'])
+def export_pdf():
+    """导出PDF文件"""
+    print("===== 收到PDF导出请求 =====")
+    data = request.json
+    pages = data.get('pages', [])
+
+    print(f"收到 {len(pages)} 页")
+
+    if not pages:
+        return jsonify({'error': 'No pages provided'}), 400
+
+    try:
+        from PIL import Image
+        import img2pdf
+
+        # 将所有页面转换为PIL Image
+        images = []
+        for i, page_base64 in enumerate(pages):
+            print(f"处理第 {i+1} 页...")
+            # 解码base64图片
+            if ',' in page_base64:
+                page_base64 = page_base64.split(',')[1]
+            img_data = base64.b64decode(page_base64)
+            img = Image.open(io.BytesIO(img_data))
+            # 转换为RGB模式（PDF需要）
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+            images.append(img)
+
+        print(f"共处理 {len(images)} 张图片")
+
+        # 将图片保存到临时文件，然后用img2pdf生成PDF
+        temp_files = []
+
+        for i, img in enumerate(images):
+            temp_path = os.path.join(UPLOAD_FOLDER, f'temp_page_{i}.jpg')
+            img.save(temp_path, 'JPEG', quality=95)
+            temp_files.append(temp_path)
+
+        print("生成PDF中...")
+
+        # 生成PDF
+        pdf_bytes_data = img2pdf.convert(temp_files)
+
+        print(f"PDF生成成功，大小: {len(pdf_bytes_data)} bytes")
+
+        # 清理临时文件
+        for temp_file in temp_files:
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+
+        print("返回PDF文件")
+
+        # 返回PDF文件
+        return send_file(
+            io.BytesIO(pdf_bytes_data),
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name='scanned_document.pdf'
+        )
+
+    except Exception as e:
+        print(f"PDF导出错误: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 

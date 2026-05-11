@@ -1936,6 +1936,17 @@ class DocumentScanner:
                 cv2.THRESH_BINARY, 21, 10
             )
 
+            # 3.5 去除孤立噪点（只去除面积很小的黑色区域）
+            # 使用连通区域分析
+            num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(255 - binary, connectivity=8)
+            noise_mask = np.zeros_like(binary)
+            for i in range(1, num_labels):  # 跳过背景
+                area = stats[i, cv2.CC_STAT_AREA]
+                if area < 10:  # 面积小于10像素认为是噪点
+                    noise_mask[labels == i] = 255
+            # 将噪点变成白色（去除）
+            binary[noise_mask == 255] = 255
+
             # 4. 构建结果 - 白色背景
             result = np.ones_like(normalized) * 255
 

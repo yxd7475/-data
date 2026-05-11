@@ -1,14 +1,15 @@
-/* 文档扫描器样式 */
+/* 文档扫描器样式 - 现代化UI */
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #000;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    background: linear-gradient(180deg, #0f0f0f 0%, #1a1a2e 100%);
     color: #fff;
     height: 100vh;
     overflow: hidden;
@@ -20,16 +21,20 @@ body {
     height: 100vh;
 }
 
+/* 头部 */
 .header {
-    background: #1a1a1a;
-    padding: 12px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 15px 20px;
     text-align: center;
     flex-shrink: 0;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
 .header h1 {
-    font-size: 18px;
-    font-weight: 500;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .main {
@@ -49,7 +54,7 @@ body {
     display: flex;
 }
 
-/* 视频容器 - 关键：确保overlay和video对齐 */
+/* 视频容器 */
 .video-container {
     position: relative;
     flex: 1;
@@ -81,19 +86,26 @@ body {
 
 .guide-text {
     position: absolute;
-    bottom: 20px;
+    bottom: 25px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0,0,0,0.7);
-    padding: 8px 16px;
-    border-radius: 16px;
-    font-size: 13px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9));
+    padding: 10px 24px;
+    border-radius: 25px;
+    font-size: 14px;
     white-space: nowrap;
     z-index: 20;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: translateX(-50%) scale(1); }
+    50% { transform: translateX(-50%) scale(1.02); }
 }
 
 .guide-text.detected {
-    background: rgba(0, 188, 212, 0.9);
+    background: linear-gradient(135deg, rgba(0, 200, 150, 0.9), rgba(0, 150, 136, 0.9));
 }
 
 /* 控制按钮 */
@@ -101,9 +113,9 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 30px;
-    padding: 20px;
-    background: #111;
+    gap: 40px;
+    padding: 25px;
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
     flex-shrink: 0;
 }
 
@@ -114,13 +126,35 @@ body {
     justify-content: center;
     border: none;
     border-radius: 50%;
-    background: #333;
     color: #fff;
     cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:active {
+    transform: scale(0.95);
+}
+
+.btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform 0.3s ease;
+}
+
+.btn:active::after {
+    transform: translate(-50%, -50%) scale(1);
 }
 
 .btn span {
-    font-size: 22px;
+    font-size: 24px;
 }
 
 .btn small {
@@ -131,20 +165,37 @@ body {
 .btn-secondary {
     width: 55px;
     height: 55px;
-    background: #444;
+    background: linear-gradient(135deg, #3a3a5c 0%, #2d2d44 100%);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #4a4a6c 0%, #3d3d54 100%);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
 .btn-capture {
-    width: 75px;
-    height: 75px;
-    background: linear-gradient(135deg, #4CAF50, #2E7D32);
-    border: 3px solid #fff;
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #00c896 0%, #00a67d 100%);
+    border: 4px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 6px 25px rgba(0, 200, 150, 0.4);
+}
+
+.btn-capture:hover {
+    background: linear-gradient(135deg, #00d9a6 0%, #00b78d 100%);
+    box-shadow: 0 8px 30px rgba(0, 200, 150, 0.5);
 }
 
 .btn-primary {
     width: 60px;
     height: 60px;
-    background: linear-gradient(135deg, #2196F3, #1565C0);
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #5fbcff 0%, #10f3ff 100%);
 }
 
 /* 结果显示 */
@@ -153,8 +204,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #0a0a0a;
-    padding: 10px;
+    background: linear-gradient(180deg, #0a0a15 0%, #12121f 100%);
+    padding: 15px;
     overflow: auto;
 }
 
@@ -162,6 +213,74 @@ body {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
+    border-radius: 10px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* 页面缩略图预览 */
+.pages-preview {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+.pages-preview::-webkit-scrollbar {
+    height: 4px;
+}
+
+.pages-preview::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+}
+
+.pages-preview::-webkit-scrollbar-thumb {
+    background: rgba(102, 126, 234, 0.5);
+    border-radius: 2px;
+}
+
+.page-thumb {
+    width: 65px;
+    height: 85px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    flex-shrink: 0;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.page-thumb:active {
+    transform: scale(0.95);
+}
+
+.page-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.page-thumb .page-num {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.page-thumb.active {
+    border-color: #667eea;
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
 }
 
 /* 模式选择 */
@@ -169,19 +288,107 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    padding: 12px;
-    background: #1a1a1a;
+    gap: 12px;
+    padding: 15px;
+    background: rgba(26, 26, 46, 0.8);
     flex-shrink: 0;
 }
 
+.mode-selector label {
+    font-size: 14px;
+    color: #aaa;
+}
+
 .mode-selector select {
-    padding: 8px 12px;
+    padding: 10px 16px;
     font-size: 14px;
     border: none;
-    border-radius: 6px;
-    background: #333;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #2d2d44 0%, #1a1a2e 100%);
     color: #fff;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.mode-selector select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.5);
+}
+
+/* PDF控制区 */
+.pdf-controls {
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    padding: 18px;
+    flex-shrink: 0;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+}
+
+.pdf-controls select {
+    padding: 12px 18px;
+    font-size: 14px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #2d2d44 0%, #1a1a2e 100%);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.pdf-controls select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.5);
+}
+
+.btn-export {
+    padding: 14px 30px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
+}
+
+.btn-export:active {
+    transform: scale(0.98);
+}
+
+.btn-export:hover {
+    background: linear-gradient(135deg, #7688ea 0%, #8658b2 100%);
+    box-shadow: 0 6px 25px rgba(102, 126, 234, 0.5);
+}
+
+/* 页数统计 */
+.page-count {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 20;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* 加载提示 */
@@ -192,11 +399,12 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.85);
+    background: rgba(0, 0, 0, 0.9);
     flex-direction: column;
     align-items: center;
     justify-content: center;
     z-index: 1000;
+    backdrop-filter: blur(10px);
 }
 
 .loading.active {
@@ -204,10 +412,10 @@ body {
 }
 
 .spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid #333;
-    border-top-color: #00BCD4;
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(102, 126, 234, 0.2);
+    border-top-color: #667eea;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
@@ -217,7 +425,13 @@ body {
 }
 
 .loading p {
-    margin-top: 12px;
-    font-size: 14px;
+    margin-top: 20px;
+    font-size: 16px;
     color: #888;
+}
+
+/* 隐藏滚动条但保持功能 */
+::-webkit-scrollbar {
+    width: 0;
+    height: 0;
 }
