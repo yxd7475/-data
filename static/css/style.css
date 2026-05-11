@@ -1,0 +1,223 @@
+/* 文档扫描器样式 */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #000;
+    color: #fff;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.header {
+    background: #1a1a1a;
+    padding: 12px 20px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.header h1 {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.mode {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+}
+
+.mode.active {
+    display: flex;
+}
+
+/* 视频容器 - 关键：确保overlay和video对齐 */
+.video-container {
+    position: relative;
+    flex: 1;
+    background: #000;
+    overflow: hidden;
+}
+
+#video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #000;
+    z-index: 1;
+}
+
+#overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background: transparent;
+    z-index: 10;
+}
+
+.guide-text {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.7);
+    padding: 8px 16px;
+    border-radius: 16px;
+    font-size: 13px;
+    white-space: nowrap;
+    z-index: 20;
+}
+
+.guide-text.detected {
+    background: rgba(0, 188, 212, 0.9);
+}
+
+/* 控制按钮 */
+.controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    padding: 20px;
+    background: #111;
+    flex-shrink: 0;
+}
+
+.btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: #333;
+    color: #fff;
+    cursor: pointer;
+}
+
+.btn span {
+    font-size: 22px;
+}
+
+.btn small {
+    font-size: 10px;
+    margin-top: 2px;
+}
+
+.btn-secondary {
+    width: 55px;
+    height: 55px;
+    background: #444;
+}
+
+.btn-capture {
+    width: 75px;
+    height: 75px;
+    background: linear-gradient(135deg, #4CAF50, #2E7D32);
+    border: 3px solid #fff;
+}
+
+.btn-primary {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #2196F3, #1565C0);
+}
+
+/* 结果显示 */
+.result-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0a0a0a;
+    padding: 10px;
+    overflow: auto;
+}
+
+#result-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+/* 模式选择 */
+.mode-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px;
+    background: #1a1a1a;
+    flex-shrink: 0;
+}
+
+.mode-selector select {
+    padding: 8px 12px;
+    font-size: 14px;
+    border: none;
+    border-radius: 6px;
+    background: #333;
+    color: #fff;
+}
+
+/* 加载提示 */
+.loading {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.85);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.loading.active {
+    display: flex;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #333;
+    border-top-color: #00BCD4;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading p {
+    margin-top: 12px;
+    font-size: 14px;
+    color: #888;
+}

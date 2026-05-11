@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>文档扫描器</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div id="app">
+        <!-- 头部 -->
+        <header class="header">
+            <h1>📄 文档扫描器</h1>
+        </header>
+
+        <!-- 主内容区 -->
+        <main class="main">
+            <!-- 扫描模式 -->
+            <div id="scan-mode" class="mode active">
+                <!-- 视频预览 -->
+                <div class="video-container">
+                    <video id="video" autoplay playsinline></video>
+                    <canvas id="overlay"></canvas>
+                    <div id="guide-text" class="guide-text">点击拍照按钮扫描文档</div>
+                </div>
+
+                <!-- 控制按钮 -->
+                <div class="controls">
+                    <button id="btn-switch" class="btn btn-secondary">
+                        <span>🔄</span>
+                        <small>切换</small>
+                    </button>
+                    <button id="btn-capture" class="btn btn-capture">
+                        <span>📷</span>
+                    </button>
+                    <button id="btn-gallery" class="btn btn-secondary">
+                        <span>🖼️</span>
+                        <small>相册</small>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 结果模式 -->
+            <div id="result-mode" class="mode">
+                <!-- 结果图片 -->
+                <div class="result-container">
+                    <img id="result-image" src="" alt="扫描结果">
+                </div>
+
+                <!-- 增强模式选择 -->
+                <div class="mode-selector">
+                    <label>增强模式:</label>
+                    <select id="enhance-mode">
+                        <option value="scanner">扫描仪效果</option>
+                        <option value="original">原图</option>
+                        <option value="enhance">增强对比度</option>
+                        <option value="bw">黑白文档</option>
+                        <option value="magic_color">魔法色彩</option>
+                    </select>
+                </div>
+
+                <!-- 结果操作按钮 -->
+                <div class="controls">
+                    <button id="btn-retake" class="btn btn-secondary">
+                        <span>🔄</span>
+                        <small>重拍</small>
+                    </button>
+                    <button id="btn-download" class="btn btn-primary">
+                        <span>💾</span>
+                        <small>保存</small>
+                    </button>
+                    <button id="btn-apply" class="btn btn-primary">
+                        <span>✓</span>
+                        <small>应用滤镜</small>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- 隐藏的文件输入 -->
+        <input type="file" id="file-input" accept="image/*" style="display:none">
+
+        <!-- 加载提示 -->
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>处理中...</p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
