@@ -65,7 +65,15 @@ def base64_to_image(base64_str):
 
 def image_to_base64(image, format='png'):
     """将 OpenCV 图像转换为 Base64 字符串"""
-    _, buffer = cv2.imencode(f'.{format}', image)
+    # 限制最大尺寸以提高传输速度
+    h, w = image.shape[:2]
+    max_size = 2000
+    if max(h, w) > max_size:
+        scale = max_size / max(h, w)
+        image = cv2.resize(image, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+
+    # PNG 质量
+    _, buffer = cv2.imencode(f'.{format}', image, [cv2.IMWRITE_PNG_COMPRESSION, 3])
     base64_str = base64.b64encode(buffer).decode('utf-8')
     return f'data:image/{format};base64,{base64_str}'
 

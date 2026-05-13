@@ -118,12 +118,28 @@ Page({
 
   // 压缩图片
   compressImage(imagePath) {
+    const self = this
     return new Promise((resolve, reject) => {
-      wx.compressImage({
+      // 先获取图片信息
+      wx.getImageInfo({
         src: imagePath,
-        quality: 70,
-        success: (res) => resolve(res.tempFilePath),
-        fail: () => resolve(imagePath) // 压缩失败就用原图
+        success: (info) => {
+          // 计算压缩比例
+          const maxSize = 1500
+          let quality = 85
+
+          if (info.width > maxSize || info.height > maxSize) {
+            quality = 80  // 大图稍微压缩多一点
+          }
+
+          wx.compressImage({
+            src: imagePath,
+            quality: quality,
+            success: (res) => resolve(res.tempFilePath),
+            fail: () => resolve(imagePath)
+          })
+        },
+        fail: () => resolve(imagePath)
       })
     })
   },
