@@ -24,8 +24,8 @@ App({
     statusBarHeight: 0,
     screenWidth: 375,
     screenHeight: 667,
-    // 后端服务器地址（用于方案B）
-    serverUrl: 'https://your-server.com/api',
+    // 后端服务器地址
+    serverUrl: 'https://document-scanner-api.onrender.com/api',
     // 已扫描的页面
     pages: [],
     // 当前页面索引

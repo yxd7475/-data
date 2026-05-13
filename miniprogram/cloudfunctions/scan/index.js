@@ -5,8 +5,8 @@ cloud.init({
   env: cloud.DYNAMIC_CURRENT_ENV
 })
 
-// 后端服务器地址（需要替换为实际地址）
-const SERVER_URL = 'https://your-server.com/api'
+// 后端服务器地址
+const SERVER_URL = 'https://document-scanner-api.onrender.com/api'
 
 /**
  * 云函数入口函数
