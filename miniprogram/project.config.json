@@ -39,7 +39,7 @@
     "showES6CompileOption": false,
     "useCompilerPlugins": false
   },
-  "appid": "your-appid",
+  "appid": "wxaf9509f2cd8a98a4",
   "projectname": "document-scanner",
   "description": "文档扫描器小程序",
   "cloudfunctionTemplateRoot": "",
