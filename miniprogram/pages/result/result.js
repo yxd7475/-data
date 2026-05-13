@@ -1,6 +1,9 @@
 // pages/result/result.js
 const app = getApp()
 
+// 后端服务器地址
+const SERVER_URL = 'https://document-scanner-api.onrender.com'
+
 Page({
   data: {
     pages: [],
@@ -31,7 +34,6 @@ Page({
     this.loadPages()
   },
 
-  // 加载页面数据
   loadPages() {
     const pages = app.globalData.pages || []
     const currentIndex = app.globalData.currentPageIndex || 0
@@ -52,7 +54,6 @@ Page({
     this.updateCurrentImage()
   },
 
-  // 更新当前显示的图片
   updateCurrentImage() {
     const { pages, currentIndex } = this.data
     if (pages[currentIndex]) {
@@ -62,25 +63,21 @@ Page({
     }
   },
 
-  // 选择页面
   selectPage(e) {
     const index = e.currentTarget.dataset.index
     this.setData({ currentIndex: index })
     this.updateCurrentImage()
   },
 
-  // 滤镜变化
   async onFilterChange(e) {
     const newIndex = e.detail.value
-
     this.setData({ loading: true, loadingText: '应用滤镜...' })
 
     try {
       const { pages, currentIndex } = this.data
       const croppedImage = pages[currentIndex].cropped
 
-      // 调用云函数应用滤镜
-      const result = await this.callEnhanceFunction(croppedImage, this.data.filterOptions[newIndex].value)
+      const result = await this.callEnhanceAPI(croppedImage, this.data.filterOptions[newIndex].value)
 
       if (result.success) {
         pages[currentIndex].enhanced = result.image
@@ -100,28 +97,29 @@ Page({
     }
   },
 
-  // 排序变化
   onOrderChange(e) {
     this.setData({ orderIndex: e.detail.value })
   },
 
-  // 调用增强云函数
-  callEnhanceFunction(imageBase64, mode) {
+  // 调用增强API
+  callEnhanceAPI(imageBase64, mode) {
     return new Promise((resolve, reject) => {
-      wx.cloud.callFunction({
-        name: 'scan',
+      wx.request({
+        url: `${SERVER_URL}/api/enhance`,
+        method: 'POST',
         data: {
-          action: 'enhance',
-          data: {
-            image: imageBase64,
-            mode: mode
-          }
+          image: imageBase64,
+          mode: mode
         },
+        header: {
+          'content-type': 'application/json'
+        },
+        timeout: 60000,
         success: (res) => {
-          if (res.errMsg === 'cloud.callFunction:ok') {
-            resolve(res.result)
+          if (res.statusCode === 200) {
+            resolve(res.data)
           } else {
-            reject(new Error('云函数调用失败'))
+            reject(new Error(`服务器错误: ${res.statusCode}`))
           }
         },
         fail: reject
@@ -129,12 +127,10 @@ Page({
     })
   },
 
-  // 继续拍摄
   continueCapture() {
     wx.navigateBack()
   },
 
-  // 重拍
   retake() {
     const { currentIndex, pages } = this.data
 
@@ -160,15 +156,10 @@ Page({
     })
   },
 
-  // 保存图片
   saveImage() {
     const { currentImage } = this.data
-
-    // base64转临时文件
     const fs = wx.getFileSystemManager()
     const filePath = `${wx.env.USER_DATA_PATH}/scan_${Date.now()}.png`
-
-    // 去掉base64前缀
     const base64Data = currentImage.replace(/^data:image\/\w+;base64,/, '')
 
     fs.writeFile({
@@ -182,7 +173,6 @@ Page({
             wx.showToast({ title: '保存成功', icon: 'success' })
           },
           fail: (err) => {
-            console.error('保存到相册失败:', err)
             if (err.errMsg.includes('auth deny')) {
               wx.showModal({
                 title: '权限提示',
@@ -193,14 +183,12 @@ Page({
           }
         })
       },
-      fail: (err) => {
-        console.error('写入文件失败:', err)
+      fail: () => {
         wx.showToast({ title: '保存失败', icon: 'error' })
       }
     })
   },
 
-  // 预览图片
   previewImage() {
     const { currentImage } = this.data
     wx.previewImage({
@@ -209,7 +197,6 @@ Page({
     })
   },
 
-  // 导出PDF
   async exportPDF() {
     const { pages, orderIndex, orderOptions } = this.data
 
@@ -221,7 +208,6 @@ Page({
     this.setData({ loading: true, loadingText: '生成PDF...' })
 
     try {
-      // 准备页面数据
       let orderedPages = [...pages]
       if (orderOptions[orderIndex].value === 'desc') {
         orderedPages.reverse()
@@ -229,23 +215,28 @@ Page({
 
       const pagesData = orderedPages.map(p => p.enhanced)
 
-      // 调用云函数生成PDF
-      const result = await this.callExportPDFFunction(pagesData)
+      // 直接下载PDF
+      const result = await this.downloadPDF(pagesData)
 
-      if (result.fileUrl) {
-        // 下载PDF
-        this.setData({ loadingText: '下载PDF...' })
-
-        const downloadRes = await this.downloadFile(result.fileUrl)
-
-        // 打开或分享
+      if (result.tempFilePath) {
         wx.showActionSheet({
-          itemList: ['打开PDF', '发送给朋友'],
+          itemList: ['打开PDF', '保存到相册'],
           success: (res) => {
             if (res.tapIndex === 0) {
-              this.openDocument(downloadRes.tempFilePath)
+              wx.openDocument({
+                filePath: result.tempFilePath,
+                fileType: 'pdf',
+                fail: () => {
+                  wx.showToast({ title: '打开失败', icon: 'error' })
+                }
+              })
             } else if (res.tapIndex === 1) {
-              this.shareFile(downloadRes.tempFilePath)
+              wx.saveFile({
+                tempFilePath: result.tempFilePath,
+                success: () => {
+                  wx.showToast({ title: '已保存', icon: 'success' })
+                }
+              })
             }
           }
         })
@@ -258,62 +249,40 @@ Page({
     }
   },
 
-  // 调用导出PDF云函数
-  callExportPDFFunction(pagesData) {
+  // 下载PDF
+  downloadPDF(pagesData) {
     return new Promise((resolve, reject) => {
-      wx.cloud.callFunction({
-        name: 'scan',
-        data: {
-          action: 'export-pdf',
-          data: { pages: pagesData }
+      // 先用request获取PDF数据
+      wx.request({
+        url: `${SERVER_URL}/api/export-pdf`,
+        method: 'POST',
+        data: { pages: pagesData },
+        header: {
+          'content-type': 'application/json'
         },
+        responseType: 'arraybuffer',
+        timeout: 120000,
         success: (res) => {
-          if (res.errMsg === 'cloud.callFunction:ok') {
-            resolve(res.result)
+          if (res.statusCode === 200) {
+            // 保存为临时文件
+            const fs = wx.getFileSystemManager()
+            const tempPath = `${wx.env.USER_DATA_PATH}/scan_${Date.now()}.pdf`
+
+            fs.writeFile({
+              filePath: tempPath,
+              data: res.data,
+              encoding: 'binary',
+              success: () => {
+                resolve({ tempFilePath: tempPath })
+              },
+              fail: reject
+            })
           } else {
-            reject(new Error('云函数调用失败'))
+            reject(new Error(`服务器错误: ${res.statusCode}`))
           }
         },
         fail: reject
       })
-    })
-  },
-
-  // 下载文件
-  downloadFile(url) {
-    return new Promise((resolve, reject) => {
-      wx.downloadFile({
-        url,
-        success: resolve,
-        fail: reject
-      })
-    })
-  },
-
-  // 打开文档
-  openDocument(filePath) {
-    wx.openDocument({
-      filePath,
-      fileType: 'pdf',
-      fail: (err) => {
-        console.error('打开文档失败:', err)
-        wx.showToast({ title: '打开失败', icon: 'error' })
-      }
-    })
-  },
-
-  // 分享文件
-  shareFile(filePath) {
-    wx.shareFileMessage({
-      filePath,
-      fileType: 'pdf',
-      success: () => {
-        wx.showToast({ title: '发送成功', icon: 'success' })
-      },
-      fail: (err) => {
-        console.error('分享失败:', err)
-        wx.showToast({ title: '发送失败', icon: 'error' })
-      }
     })
   }
 })

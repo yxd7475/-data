@@ -1,13 +1,16 @@
 // pages/index/index.js
 const app = getApp()
 
+// 后端服务器地址
+const SERVER_URL = 'https://document-scanner-api.onrender.com'
+
 Page({
   data: {
-    devicePosition: 'back',  // 摄像头方向
-    flashMode: 'auto',       // 闪光灯模式
+    devicePosition: 'back',
+    flashMode: 'auto',
     loading: false,
     loadingText: '处理中...',
-    pages: [],               // 已扫描的页面
+    pages: [],
     filterIndex: 0,
     filterOptions: [
       { value: 'scanner', label: '扫描仪效果' },
@@ -19,14 +22,12 @@ Page({
   },
 
   onLoad() {
-    // 获取全局数据中的已扫描页面
     this.setData({
       pages: app.globalData.pages || []
     })
   },
 
   onShow() {
-    // 每次显示页面时更新页面数据
     this.setData({
       pages: app.globalData.pages || []
     })
@@ -55,7 +56,6 @@ Page({
   // 拍照
   takePhoto() {
     const ctx = wx.createCameraContext()
-
     this.setData({ loading: true, loadingText: '拍照中...' })
 
     ctx.takePhoto({
@@ -76,20 +76,16 @@ Page({
     this.setData({ loadingText: '正在扫描...' })
 
     try {
-      // 获取图片信息
-      const imageInfo = await this.getImageInfo(imagePath)
-
       // 压缩图片
       const compressedPath = await this.compressImage(imagePath)
 
       // 转换为base64
       const base64 = await this.imageToBase64(compressedPath)
 
-      // 调用云函数处理
-      const result = await this.callScanFunction(base64)
+      // 直接调用后端API
+      const result = await this.callScanAPI(base64)
 
       if (result.success) {
-        // 保存到全局数据
         const pageData = {
           cropped: result.cropped || result.image,
           enhanced: result.image,
@@ -104,7 +100,6 @@ Page({
           loading: false
         })
 
-        // 跳转到结果页
         wx.navigateTo({
           url: '/pages/result/result'
         })
@@ -121,25 +116,14 @@ Page({
     }
   },
 
-  // 获取图片信息
-  getImageInfo(imagePath) {
-    return new Promise((resolve, reject) => {
-      wx.getImageInfo({
-        src: imagePath,
-        success: resolve,
-        fail: reject
-      })
-    })
-  },
-
   // 压缩图片
   compressImage(imagePath) {
     return new Promise((resolve, reject) => {
       wx.compressImage({
         src: imagePath,
-        quality: 80,
+        quality: 70,
         success: (res) => resolve(res.tempFilePath),
-        fail: reject
+        fail: () => resolve(imagePath) // 压缩失败就用原图
       })
     })
   },
@@ -158,26 +142,31 @@ Page({
     })
   },
 
-  // 调用云函数
-  callScanFunction(imageBase64) {
+  // 直接调用后端API
+  callScanAPI(imageBase64) {
     return new Promise((resolve, reject) => {
-      wx.cloud.callFunction({
-        name: 'scan',
+      wx.request({
+        url: `${SERVER_URL}/api/scan`,
+        method: 'POST',
         data: {
-          action: 'scan',
-          data: {
-            image: imageBase64,
-            mode: this.data.filterOptions[this.data.filterIndex].value
-          }
+          image: imageBase64,
+          mode: this.data.filterOptions[this.data.filterIndex].value
         },
+        header: {
+          'content-type': 'application/json'
+        },
+        timeout: 60000,
         success: (res) => {
-          if (res.errMsg === 'cloud.callFunction:ok') {
-            resolve(res.result)
+          if (res.statusCode === 200) {
+            resolve(res.data)
           } else {
-            reject(new Error('云函数调用失败'))
+            reject(new Error(`服务器错误: ${res.statusCode}`))
           }
         },
-        fail: reject
+        fail: (err) => {
+          console.error('请求失败:', err)
+          reject(new Error('网络请求失败，请检查网络连接'))
+        }
       })
     })
   },
@@ -204,10 +193,5 @@ Page({
       content: '请检查摄像头权限设置',
       showCancel: false
     })
-  },
-
-  // 摄像头停止
-  onCameraStop() {
-    console.log('摄像头已停止')
   }
 })

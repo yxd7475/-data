@@ -1,9 +1,9 @@
 {
   "miniprogramRoot": "./",
   "cloudfunctionRoot": "cloudfunctions/",
-  "cloudbaseRoot": "cloudbaserc.json",
+  "cloudbaseRoot": "cloudbaserc.json/",
   "setting": {
-    "urlCheck": true,
+    "urlCheck": false,
     "es6": true,
     "enhance": true,
     "postcss": true,
@@ -38,7 +38,12 @@
     "disableUseStrict": false,
     "minifyWXML": true,
     "showES6CompileOption": false,
-    "useCompilerPlugins": false
+    "useCompilerPlugins": false,
+    "compileWorklet": false,
+    "localPlugins": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true
   },
   "appid": "wxaf9509f2cd8a98a4",
   "projectname": "document-scanner",
@@ -48,5 +53,11 @@
   "editorSetting": {
     "tabIndent": "insertSpaces",
     "tabSize": 2
+  },
+  "compileType": "miniprogram",
+  "simulatorPluginLibVersion": {},
+  "packOptions": {
+    "ignore": [],
+    "include": []
   }
 }
