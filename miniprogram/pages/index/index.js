@@ -58,6 +58,14 @@ Page({
     ctx.takePhoto({
       quality: 'high',
       success: (res) => {
+        console.log('拍照成功, 图片路径:', res.tempImagePath)
+        // 获取图片信息
+        wx.getImageInfo({
+          src: res.tempImagePath,
+          success: (info) => {
+            console.log('图片尺寸:', info.width, 'x', info.height)
+          }
+        })
         this.processImage(res.tempImagePath)
       },
       fail: (err) => {

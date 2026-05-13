@@ -5,6 +5,7 @@
     id="camera"
     device-position="{{devicePosition}}"
     flash="{{flashMode}}"
+    frame-size="large"
     class="camera"
     binderror="onCameraError"
     bindstop="onCameraStop"
