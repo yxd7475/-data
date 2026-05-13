@@ -2,10 +2,10 @@ services:
   - type: web
     name: document-scanner-api
     env: python
-    region: oregon
+    region: singapore
     plan: free
     buildCommand: pip install -r requirements-server.txt
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 120
+    startCommand: gunicorn app_server:app --bind 0.0.0.0:$PORT --timeout 120
     envVars:
       - key: PYTHON_VERSION
-        value: 3.9.18
+        value: 3.11.0
