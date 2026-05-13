@@ -1902,54 +1902,32 @@ class DocumentScanner:
             return cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
 
         if mode == 'scanner':
-            # 扫描仪效果 - 不使用模糊，保持清晰
+            # 扫描仪效果 - 背景纯白，文字清晰黑白分明
             h, w = image.shape[:2]
 
-            # 1. 转LAB空间，只处理亮度通道
-            lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
-            l, a, b = cv2.split(lab)
+            # 1. 转灰度
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-            # 2. CLAHE增强对比度（不模糊）
-            clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8, 8))
-            l_enhanced = clahe.apply(l)
+            # 2. 大津法二值化 - 这是最接近扫描仪效果的
+            _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-            # 3. 背景变白：亮度>150的区域提白
-            l_float = l_enhanced.astype(np.float32)
-            # 背景区域（高亮度）强制变白
-            bg_mask = l_enhanced > 150
-            l_float[bg_mask] = 255
-
-            # 4. 文字区域加深：亮度<150的区域变深
-            text_mask = ~bg_mask
-            l_float[text_mask] = l_float[text_mask] * 0.5  # 加深文字
-
-            l_result = np.clip(l_float, 0, 255).astype(np.uint8)
-
-            # 5. 合并通道
-            lab_result = cv2.merge([l_result, a, b])
-            result = cv2.cvtColor(lab_result, cv2.COLOR_LAB2BGR)
-
-            # 6. 检测彩色区域（印章等）
+            # 3. 彩色区域检测（印章等）
             hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
             saturation = hsv[:, :, 1]
             hue = hsv[:, :, 0]
 
-            # 红色和彩色区域
+            # 红色印章
             is_red = ((hue < 15) | (hue > 165)) & (saturation > 50)
+            # 其他彩色
             is_colorful = saturation > 80
             is_color = is_red | is_colorful
 
-            # 7. 彩色区域保留原色并增强
+            # 4. 创建结果 - 二值图转彩色
+            result = cv2.cvtColor(binary, cv2.COLOR_GRAY2BGR)
+
+            # 5. 彩色区域保留原色
             if np.any(is_color):
-                color_lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
-                cl, ca, cb = cv2.split(color_lab)
-                cl_enhanced = clahe.apply(cl)
-                # 增强饱和度
-                ca_enhanced = np.clip(ca.astype(np.float32) * 1.3, 0, 255).astype(np.uint8)
-                cb_enhanced = np.clip(cb.astype(np.float32) * 1.3, 0, 255).astype(np.uint8)
-                color_lab_enhanced = cv2.merge([cl_enhanced, ca_enhanced, cb_enhanced])
-                color_result = cv2.cvtColor(color_lab_enhanced, cv2.COLOR_LAB2BGR)
-                result[is_color] = color_result[is_color]
+                result[is_color] = image[is_color]
 
             return result
 
