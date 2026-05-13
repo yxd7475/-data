@@ -1902,80 +1902,54 @@ class DocumentScanner:
             return cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
 
         if mode == 'scanner':
-            # 真正的扫描仪效果：背景纯白、文字清晰锐利
+            # 扫描仪效果 - 不使用模糊，保持清晰
             h, w = image.shape[:2]
 
-            # 1. 光照归一化，消除阴影
-            kernel_size = max(51, min(h, w) // 5)
-            if kernel_size % 2 == 0:
-                kernel_size += 1
+            # 1. 转LAB空间，只处理亮度通道
+            lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+            l, a, b = cv2.split(lab)
 
-            b, g, r = cv2.split(image)
-            def norm_ch(ch):
-                bg = cv2.GaussianBlur(ch, (kernel_size, kernel_size), 0)
-                result = np.clip(ch.astype(np.float32) * 255.0 / np.maximum(bg, 1), 0, 255)
-                return result.astype(np.uint8)
+            # 2. CLAHE增强对比度（不模糊）
+            clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8, 8))
+            l_enhanced = clahe.apply(l)
 
-            normalized = cv2.merge([norm_ch(b), norm_ch(g), norm_ch(r)])
+            # 3. 背景变白：亮度>150的区域提白
+            l_float = l_enhanced.astype(np.float32)
+            # 背景区域（高亮度）强制变白
+            bg_mask = l_enhanced > 150
+            l_float[bg_mask] = 255
 
-            # 2. 检测彩色区域（印章等）
-            hsv_orig = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-            sat_orig = hsv_orig[:, :, 1]
-            hue_orig = hsv_orig[:, :, 0]
+            # 4. 文字区域加深：亮度<150的区域变深
+            text_mask = ~bg_mask
+            l_float[text_mask] = l_float[text_mask] * 0.5  # 加深文字
 
-            is_red = ((hue_orig < 15) | (hue_orig > 165)) & (sat_orig > 40)
-            is_colorful = sat_orig > 70
+            l_result = np.clip(l_float, 0, 255).astype(np.uint8)
+
+            # 5. 合并通道
+            lab_result = cv2.merge([l_result, a, b])
+            result = cv2.cvtColor(lab_result, cv2.COLOR_LAB2BGR)
+
+            # 6. 检测彩色区域（印章等）
+            hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+            saturation = hsv[:, :, 1]
+            hue = hsv[:, :, 0]
+
+            # 红色和彩色区域
+            is_red = ((hue < 15) | (hue > 165)) & (saturation > 50)
+            is_colorful = saturation > 80
             is_color = is_red | is_colorful
 
-            # 3. 转灰度
-            gray = cv2.cvtColor(normalized, cv2.COLOR_BGR2GRAY)
-
-            # 4. 自适应二值化 - 背景变白，文字变黑
-            binary = cv2.adaptiveThreshold(
-                gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                cv2.THRESH_BINARY, 25, 10
-            )
-
-            # 5. 去除小噪点
-            kernel_clean = np.ones((2, 2), np.uint8)
-            binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel_clean)
-
-            # 6. 创建最终结果
-            # 背景 = 纯白
-            result = np.ones((h, w, 3), dtype=np.uint8) * 255
-
-            # 文字区域 = 深色
-            text_mask = binary == 0
-            # 根据原图亮度确定文字深浅
-            text_intensity = gray[text_mask]
-            for c in range(3):
-                result[:, :, c][text_mask] = np.clip(text_intensity * 0.3, 0, 255).astype(np.uint8)
-
-            # 7. 边缘锐化 - 使用Unsharp Masking
-            gaussian = cv2.GaussianBlur(result, (0, 0), 3)
-            result = cv2.addWeighted(result, 1.5, gaussian, -0.5, 0)
-
-            # 8. 彩色区域（印章）保留原色并增强
+            # 7. 彩色区域保留原色并增强
             if np.any(is_color):
-                # 从原图提取彩色区域
-                color_region = normalized.copy()
-                # 增强饱和度和对比度
-                lab = cv2.cvtColor(color_region, cv2.COLOR_BGR2LAB)
-                l_ch, a_ch, b_ch = cv2.split(lab)
-
-                clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-                l_enhanced = clahe.apply(l_ch)
-                a_enhanced = np.clip(a_ch.astype(np.float32) * 1.2, 0, 255).astype(np.uint8)
-                b_enhanced = np.clip(b_ch.astype(np.float32) * 1.2, 0, 255).astype(np.uint8)
-
-                lab_enhanced = cv2.merge([l_enhanced, a_enhanced, b_enhanced])
-                color_enhanced = cv2.cvtColor(lab_enhanced, cv2.COLOR_LAB2BGR)
-
-                # 锐化彩色区域
-                gaussian_c = cv2.GaussianBlur(color_enhanced, (0, 0), 3)
-                color_enhanced = cv2.addWeighted(color_enhanced, 1.5, gaussian_c, -0.5, 0)
-
-                result[is_color] = color_enhanced[is_color]
+                color_lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+                cl, ca, cb = cv2.split(color_lab)
+                cl_enhanced = clahe.apply(cl)
+                # 增强饱和度
+                ca_enhanced = np.clip(ca.astype(np.float32) * 1.3, 0, 255).astype(np.uint8)
+                cb_enhanced = np.clip(cb.astype(np.float32) * 1.3, 0, 255).astype(np.uint8)
+                color_lab_enhanced = cv2.merge([cl_enhanced, ca_enhanced, cb_enhanced])
+                color_result = cv2.cvtColor(color_lab_enhanced, cv2.COLOR_LAB2BGR)
+                result[is_color] = color_result[is_color]
 
             return result
 
