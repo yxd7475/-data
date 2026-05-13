@@ -2,9 +2,21 @@
 __pycache__/
 *.py[cod]
 *.pyo
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+*.egg-info/
+dist/
+build/
 
 # SSL certificates
 *.pem
+*.key
+*.crt
 
 # Output files
 output/
@@ -13,6 +25,7 @@ output/
 .idea/
 .vscode/
 *.swp
+*.swo
 
 # OS
 .DS_Store
@@ -20,6 +33,29 @@ Thumbs.db
 
 # Uploads
 uploads/
+*.jpg
+*.jpeg
+*.png
+*.pdf
 
 # Repo folder
 repo/
+
+# 日志
+*.log
+
+# 环境变量
+.env
+.env.local
+
+# 小程序
+miniprogram/node_modules/
+miniprogram_npm/
+
+# 云函数
+cloudfunctions/*/node_modules/
+
+# 其他
+.agents/
+*.private.*
+skills-lock.json

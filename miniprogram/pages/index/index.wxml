@@ -1,0 +1,55 @@
+<!--pages/index/index.wxml-->
+<view class="container">
+  <!-- 摄像头预览 -->
+  <camera
+    id="camera"
+    device-position="{{devicePosition}}"
+    flash="{{flashMode}}"
+    class="camera"
+    binderror="onCameraError"
+    bindstop="onCameraStop"
+  >
+    <!-- 引导文字 -->
+    <cover-view class="guide-text">将文档放入框内拍照</cover-view>
+
+    <!-- 已拍页数 -->
+    <cover-view class="page-count" wx:if="{{pages.length > 0}}">
+      已拍 {{pages.length}} 页
+    </cover-view>
+  </camera>
+
+  <!-- 控制按钮 -->
+  <view class="controls">
+    <view class="btn btn-secondary" bindtap="chooseFromAlbum">
+      <text>🖼️</text>
+    </view>
+    <view class="btn btn-capture" bindtap="takePhoto">
+      <text>📷</text>
+    </view>
+    <view class="btn btn-secondary" bindtap="switchCamera">
+      <text>🔄</text>
+    </view>
+  </view>
+
+  <!-- 滤镜选择 -->
+  <view class="filter-selector">
+    <text class="label">滤镜:</text>
+    <picker mode="selector" range="{{filterOptions}}" range-key="label" value="{{filterIndex}}" bindchange="onFilterChange">
+      <view class="picker">
+        {{filterOptions[filterIndex].label}}
+        <text class="arrow">▼</text>
+      </view>
+    </picker>
+  </view>
+
+  <!-- 查看结果按钮 -->
+  <view class="result-btn" wx:if="{{pages.length > 0}}" bindtap="goToResult">
+    <text>查看结果 ({{pages.length}}页)</text>
+  </view>
+
+  <!-- 加载遮罩 -->
+  <view class="loading-mask" wx:if="{{loading}}">
+    <view class="spinner"></view>
+    <text class="loading-text">{{loadingText}}</text>
+  </view>
+</view>

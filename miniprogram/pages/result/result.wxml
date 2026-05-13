@@ -1,0 +1,72 @@
+<!--pages/result/result.wxml-->
+<view class="container">
+  <!-- 结果图片 -->
+  <view class="result-container">
+    <image
+      class="result-image"
+      src="{{currentImage}}"
+      mode="aspectFit"
+      bindtap="previewImage"
+    />
+  </view>
+
+  <!-- 缩略图预览 -->
+  <scroll-view class="pages-preview" scroll-x="true" wx:if="{{pages.length > 1}}">
+    <view
+      class="page-thumb {{index === currentIndex ? 'active' : ''}}"
+      wx:for="{{pages}}"
+      wx:key="index"
+      bindtap="selectPage"
+      data-index="{{index}}"
+    >
+      <image src="{{item.enhanced}}" mode="aspectFill" />
+      <text class="page-num">P{{index + 1}}</text>
+    </view>
+  </scroll-view>
+
+  <!-- 滤镜选择 -->
+  <view class="filter-selector">
+    <text class="label">滤镜:</text>
+    <picker mode="selector" range="{{filterOptions}}" range-key="label" value="{{filterIndex}}" bindchange="onFilterChange">
+      <view class="picker">
+        {{filterOptions[filterIndex].label}}
+        <text class="arrow">▼</text>
+      </view>
+    </picker>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="controls">
+    <view class="btn btn-secondary" bindtap="continueCapture">
+      <text>➕</text>
+      <text class="btn-text">继续拍</text>
+    </view>
+    <view class="btn btn-secondary" bindtap="retake">
+      <text>🔄</text>
+      <text class="btn-text">重拍</text>
+    </view>
+    <view class="btn btn-primary" bindtap="saveImage">
+      <text>💾</text>
+      <text class="btn-text">保存</text>
+    </view>
+  </view>
+
+  <!-- PDF导出 -->
+  <view class="export-section">
+    <picker mode="selector" range="{{orderOptions}}" range-key="label" value="{{orderIndex}}" bindchange="onOrderChange">
+      <view class="picker">
+        {{orderOptions[orderIndex].label}}
+        <text class="arrow">▼</text>
+      </view>
+    </picker>
+    <button class="export-btn" bindtap="exportPDF">
+      📄 导出PDF ({{pages.length}}页)
+    </button>
+  </view>
+
+  <!-- 加载遮罩 -->
+  <view class="loading-mask" wx:if="{{loading}}">
+    <view class="spinner"></view>
+    <text class="loading-text">{{loadingText}}</text>
+  </view>
+</view>

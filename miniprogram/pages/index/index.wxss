@@ -1,0 +1,147 @@
+/* pages/index/index.wxss */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #000;
+}
+
+/* 摄像头 */
+.camera {
+  flex: 1;
+  width: 100%;
+  position: relative;
+}
+
+/* 引导文字 */
+.guide-text {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(102, 126, 234, 0.9);
+  color: #fff;
+  padding: 10px 24px;
+  border-radius: 25px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* 页数统计 */
+.page-count {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* 控制按钮 */
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 50px;
+  padding: 25px;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 24px;
+}
+
+.btn-secondary {
+  width: 55px;
+  height: 55px;
+  background: linear-gradient(135deg, #3a3a5c 0%, #2d2d44 100%);
+}
+
+.btn-capture {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #00c896 0%, #00a67d 100%);
+  border: 4px solid #fff;
+  box-shadow: 0 6px 25px rgba(0, 200, 150, 0.4);
+}
+
+/* 滤镜选择 */
+.filter-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 15px;
+  background: rgba(26, 26, 46, 0.9);
+}
+
+.filter-selector .label {
+  color: #aaa;
+  font-size: 14px;
+}
+
+.filter-selector .picker {
+  background: linear-gradient(135deg, #2d2d44 0%, #1a1a2e 100%);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.filter-selector .arrow {
+  margin-left: 8px;
+  font-size: 12px;
+  color: #888;
+}
+
+/* 查看结果按钮 */
+.result-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  text-align: center;
+  padding: 15px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* 加载遮罩 */
+.loading-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(102, 126, 234, 0.2);
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: #fff;
+  margin-top: 15px;
+  font-size: 14px;
+}
