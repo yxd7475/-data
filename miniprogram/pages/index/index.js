@@ -33,27 +33,24 @@ Page({
     })
   },
 
-  // 切换摄像头
   switchCamera() {
     this.setData({
       devicePosition: this.data.devicePosition === 'back' ? 'front' : 'back'
     })
   },
 
-  // 从相册选择
   chooseFromAlbum() {
     wx.chooseMedia({
       count: 1,
       mediaType: ['image'],
+      sizeType: ['original'],  // 选择原图
       sourceType: ['album'],
       success: (res) => {
-        const tempFilePath = res.tempFiles[0].tempFilePath
-        this.processImage(tempFilePath)
+        this.processImage(res.tempFiles[0].tempFilePath)
       }
     })
   },
 
-  // 拍照
   takePhoto() {
     const ctx = wx.createCameraContext()
     this.setData({ loading: true, loadingText: '拍照中...' })
@@ -71,18 +68,15 @@ Page({
     })
   },
 
-  // 处理图片
   async processImage(imagePath) {
     this.setData({ loadingText: '正在扫描...' })
 
     try {
-      // 压缩图片
-      const compressedPath = await this.compressImage(imagePath)
+      // 不压缩，直接用原图
+      const base64 = await this.imageToBase64(imagePath)
 
-      // 转换为base64
-      const base64 = await this.imageToBase64(compressedPath)
+      console.log('图片base64长度:', base64.length)
 
-      // 直接调用后端API
       const result = await this.callScanAPI(base64)
 
       if (result.success) {
@@ -116,35 +110,6 @@ Page({
     }
   },
 
-  // 压缩图片
-  compressImage(imagePath) {
-    const self = this
-    return new Promise((resolve, reject) => {
-      // 先获取图片信息
-      wx.getImageInfo({
-        src: imagePath,
-        success: (info) => {
-          // 计算压缩比例
-          const maxSize = 1500
-          let quality = 85
-
-          if (info.width > maxSize || info.height > maxSize) {
-            quality = 80  // 大图稍微压缩多一点
-          }
-
-          wx.compressImage({
-            src: imagePath,
-            quality: quality,
-            success: (res) => resolve(res.tempFilePath),
-            fail: () => resolve(imagePath)
-          })
-        },
-        fail: () => resolve(imagePath)
-      })
-    })
-  },
-
-  // 图片转base64
   imageToBase64(imagePath) {
     return new Promise((resolve, reject) => {
       wx.getFileSystemManager().readFile({
@@ -158,9 +123,10 @@ Page({
     })
   },
 
-  // 直接调用后端API
   callScanAPI(imageBase64) {
     return new Promise((resolve, reject) => {
+      this.setData({ loadingText: '上传中...' })
+
       wx.request({
         url: `${SERVER_URL}/api/scan`,
         method: 'POST',
@@ -171,7 +137,7 @@ Page({
         header: {
           'content-type': 'application/json'
         },
-        timeout: 60000,
+        timeout: 120000,  // 2分钟超时
         success: (res) => {
           if (res.statusCode === 200) {
             resolve(res.data)
@@ -181,32 +147,25 @@ Page({
         },
         fail: (err) => {
           console.error('请求失败:', err)
-          reject(new Error('网络请求失败，请检查网络连接'))
+          reject(new Error('网络请求失败'))
         }
       })
     })
   },
 
-  // 滤镜选择变化
   onFilterChange(e) {
-    this.setData({
-      filterIndex: e.detail.value
-    })
+    this.setData({ filterIndex: e.detail.value })
   },
 
-  // 跳转到结果页
   goToResult() {
-    wx.navigateTo({
-      url: '/pages/result/result'
-    })
+    wx.navigateTo({ url: '/pages/result/result' })
   },
 
-  // 摄像头错误
   onCameraError(e) {
     console.error('摄像头错误:', e.detail)
     wx.showModal({
       title: '摄像头错误',
-      content: '请检查摄像头权限设置',
+      content: '请检查摄像头权限',
       showCancel: false
     })
   }

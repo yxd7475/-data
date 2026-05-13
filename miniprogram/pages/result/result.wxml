@@ -1,14 +1,15 @@
 <!--pages/result/result.wxml-->
 <view class="container">
   <!-- 结果图片 -->
-  <view class="result-container">
+  <scroll-view scroll-y class="result-container">
     <image
       class="result-image"
       src="{{currentImage}}"
-      mode="aspectFit"
+      mode="widthFix"
       bindtap="previewImage"
+      show-menu-by-longpress="{{true}}"
     />
-  </view>
+  </scroll-view>
 
   <!-- 缩略图预览 -->
   <scroll-view class="pages-preview" scroll-x="true" wx:if="{{pages.length > 1}}">
