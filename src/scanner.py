@@ -1902,89 +1902,79 @@ class DocumentScanner:
             return cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
 
         if mode == 'scanner':
-            # 扫描仪效果 - 高清锐利版
+            # 真正的扫描仪效果：背景纯白、文字清晰锐利
             h, w = image.shape[:2]
 
-            # 1. 先锐化原图，保留文字边缘
-            kernel_sharpen = np.array([
-                [-1, -1, -1],
-                [-1,  9, -1],
-                [-1, -1, -1]
-            ], dtype=np.float32)
-            sharpened = cv2.filter2D(image, -1, kernel_sharpen)
-            image = cv2.addWeighted(image, 0.5, sharpened, 0.5, 0)
-
-            # 2. 光照归一化去阴影
-            kernel_size = max(31, min(h, w) // 8)
+            # 1. 光照归一化，消除阴影
+            kernel_size = max(51, min(h, w) // 5)
             if kernel_size % 2 == 0:
                 kernel_size += 1
 
             b, g, r = cv2.split(image)
             def norm_ch(ch):
                 bg = cv2.GaussianBlur(ch, (kernel_size, kernel_size), 0)
-                return np.clip(ch.astype(np.float32) * 255.0 / np.maximum(bg, 1), 0, 255).astype(np.uint8)
+                result = np.clip(ch.astype(np.float32) * 255.0 / np.maximum(bg, 1), 0, 255)
+                return result.astype(np.uint8)
 
             normalized = cv2.merge([norm_ch(b), norm_ch(g), norm_ch(r)])
 
-            # 3. 检测彩色区域（印章等）
+            # 2. 检测彩色区域（印章等）
             hsv_orig = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
             sat_orig = hsv_orig[:, :, 1]
             hue_orig = hsv_orig[:, :, 0]
 
-            is_red = ((hue_orig < 15) | (hue_orig > 165)) & (sat_orig > 30)
-            is_colorful = sat_orig > 50
+            is_red = ((hue_orig < 15) | (hue_orig > 165)) & (sat_orig > 40)
+            is_colorful = sat_orig > 70
             is_color = is_red | is_colorful
 
-            # 4. 转灰度
+            # 3. 转灰度
             gray = cv2.cvtColor(normalized, cv2.COLOR_BGR2GRAY)
 
-            # 5. 自适应二值化（保留细节）
-            # 使用较大的块大小保留细节
-            block_size = 31
+            # 4. 自适应二值化 - 背景变白，文字变黑
             binary = cv2.adaptiveThreshold(
                 gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                cv2.THRESH_BINARY, block_size, 8
+                cv2.THRESH_BINARY, 25, 10
             )
 
-            # 6. 形态学去噪（只去除很小的噪点）
-            kernel_small = np.ones((2, 2), np.uint8)
-            binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel_small)
+            # 5. 去除小噪点
+            kernel_clean = np.ones((2, 2), np.uint8)
+            binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel_clean)
 
-            # 7. 用二值化结果作为mask，与原图混合
-            # 背景纯白
-            result = np.ones_like(normalized) * 255
+            # 6. 创建最终结果
+            # 背景 = 纯白
+            result = np.ones((h, w, 3), dtype=np.uint8) * 255
 
-            # 文字区域使用原图但加深
+            # 文字区域 = 深色
             text_mask = binary == 0
-            # 在文字区域使用normalized图像，加深显示
+            # 根据原图亮度确定文字深浅
+            text_intensity = gray[text_mask]
             for c in range(3):
-                result[:, :, c][text_mask] = np.clip(normalized[:, :, c][text_mask].astype(np.float32) * 0.6, 0, 255).astype(np.uint8)
+                result[:, :, c][text_mask] = np.clip(text_intensity * 0.3, 0, 255).astype(np.uint8)
 
-            # 8. 再次锐化
-            kernel_final = np.array([
-                [0, -1, 0],
-                [-1, 5, -1],
-                [0, -1, 0]
-            ], dtype=np.float32)
-            result_sharp = cv2.filter2D(result, -1, kernel_final)
-            result = cv2.addWeighted(result, 0.5, result_sharp, 0.5, 0)
+            # 7. 边缘锐化 - 使用Unsharp Masking
+            gaussian = cv2.GaussianBlur(result, (0, 0), 3)
+            result = cv2.addWeighted(result, 1.5, gaussian, -0.5, 0)
 
-            # 9. 彩色区域处理
+            # 8. 彩色区域（印章）保留原色并增强
             if np.any(is_color):
-                color_result = image.copy()
-                # 彩色区域增强
-                lab = cv2.cvtColor(color_result, cv2.COLOR_BGR2LAB)
+                # 从原图提取彩色区域
+                color_region = normalized.copy()
+                # 增强饱和度和对比度
+                lab = cv2.cvtColor(color_region, cv2.COLOR_BGR2LAB)
                 l_ch, a_ch, b_ch = cv2.split(lab)
+
                 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
                 l_enhanced = clahe.apply(l_ch)
-                a_enhanced = np.clip(a_ch.astype(np.float32) * 1.3, 0, 255).astype(np.uint8)
-                b_enhanced = np.clip(b_ch.astype(np.float32) * 1.3, 0, 255).astype(np.uint8)
+                a_enhanced = np.clip(a_ch.astype(np.float32) * 1.2, 0, 255).astype(np.uint8)
+                b_enhanced = np.clip(b_ch.astype(np.float32) * 1.2, 0, 255).astype(np.uint8)
+
                 lab_enhanced = cv2.merge([l_enhanced, a_enhanced, b_enhanced])
                 color_enhanced = cv2.cvtColor(lab_enhanced, cv2.COLOR_LAB2BGR)
 
                 # 锐化彩色区域
-                color_sharp = cv2.filter2D(color_enhanced, -1, kernel_final)
-                color_enhanced = cv2.addWeighted(color_enhanced, 0.5, color_sharp, 0.5, 0)
+                gaussian_c = cv2.GaussianBlur(color_enhanced, (0, 0), 3)
+                color_enhanced = cv2.addWeighted(color_enhanced, 1.5, gaussian_c, -0.5, 0)
+
                 result[is_color] = color_enhanced[is_color]
 
             return result
