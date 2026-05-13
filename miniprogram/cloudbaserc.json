@@ -1,0 +1,15 @@
+{
+  "envId": "cloudbase-2gy2xh8g13ec05b9",
+  "version": "2.0",
+  "$schema": "https://framework-1258016615.tcloudbaseapp.com/schema/latest.json",
+  "functionRoot": "cloudfunctions",
+  "functions": [
+    {
+      "name": "scan",
+      "timeout": 60,
+      "envVariables": {},
+      "runtime": "Nodejs16.13",
+      "handler": "index.main"
+    }
+  ]
+}
