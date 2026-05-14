@@ -1903,29 +1903,49 @@ class DocumentScanner:
             return cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
 
         if mode == 'scanner':
-            # 扫描仪效果 - 保持原图清晰度，只做增强
+            # 扫描仪效果 - 参考本地工作正常的版本
             h, w = image.shape[:2]
 
-            # 1. 转LAB空间处理亮度
-            lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
-            l, a, b = cv2.split(lab)
+            # 1. 光照归一化，消除阴影
+            kernel_size = max(51, min(h, w) // 4)
+            if kernel_size % 2 == 0:
+                kernel_size += 1
 
-            # 2. CLAHE增强对比度
+            b, g, r = cv2.split(image)
+            def norm_ch(ch):
+                bg = cv2.GaussianBlur(ch, (kernel_size, kernel_size), 0)
+                result = np.clip(ch.astype(np.float32) * 255.0 / np.maximum(bg, 1), 0, 255)
+                return result.astype(np.uint8)
+
+            normalized = cv2.merge([norm_ch(b), norm_ch(g), norm_ch(r)])
+
+            # 2. 转灰度
+            gray = cv2.cvtColor(normalized, cv2.COLOR_BGR2GRAY)
+
+            # 3. CLAHE增强对比度
             clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-            l_enhanced = clahe.apply(l)
+            enhanced = clahe.apply(gray)
 
-            # 3. 背景提白、文字加深
-            l_float = l_enhanced.astype(np.float32)
-            # 亮区变白
-            l_float[l_float > 180] = 255
-            # 暗区加深
-            l_float[l_float < 80] *= 0.6
+            # 4. 自适应二值化
+            binary = cv2.adaptiveThreshold(
+                enhanced, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                cv2.THRESH_BINARY, 21, 10
+            )
 
-            l_result = np.clip(l_float, 0, 255).astype(np.uint8)
+            # 5. 彩色区域检测（印章等）
+            hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+            saturation = hsv[:, :, 1]
+            hue = hsv[:, :, 0]
+            is_red = ((hue < 15) | (hue > 165)) & (saturation > 40)
+            is_colorful = saturation > 70
+            is_color = is_red | is_colorful
 
-            # 4. 合并输出
-            lab_result = cv2.merge([l_result, a, b])
-            result = cv2.cvtColor(lab_result, cv2.COLOR_LAB2BGR)
+            # 6. 创建结果
+            result = cv2.cvtColor(binary, cv2.COLOR_GRAY2BGR)
+
+            # 7. 彩色区域保留原色
+            if np.any(is_color):
+                result[is_color] = normalized[is_color]
 
             return result
 
