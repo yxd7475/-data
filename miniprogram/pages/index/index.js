@@ -88,6 +88,11 @@ Page({
       const result = await this.callScanAPI(base64)
 
       if (result.success) {
+        // 打印调试信息
+        if (result.debug) {
+          console.log('调试信息:', result.debug)
+        }
+
         const pageData = {
           cropped: result.cropped || result.image,
           enhanced: result.image,
