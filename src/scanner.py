@@ -1865,9 +1865,10 @@ class DocumentScanner:
 
         M = cv2.getPerspectiveTransform(shrunk_rect, dst)
 
-        # 创建白色背景
+        # 创建白色背景 - 使用高质量插值
         warped = cv2.warpPerspective(
             image, M, (maxWidth, maxHeight),
+            flags=cv2.INTER_LANCZOS4,  # 高质量插值
             borderMode=cv2.BORDER_CONSTANT,
             borderValue=(255, 255, 255)
         )

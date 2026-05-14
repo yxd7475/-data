@@ -8,6 +8,8 @@
       mode="widthFix"
       bindtap="previewImage"
       show-menu-by-longpress="{{true}}"
+      lazy-load="{{false}}"
+      webp="{{true}}"
     />
   </scroll-view>
 
