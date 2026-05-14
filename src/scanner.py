@@ -1903,32 +1903,29 @@ class DocumentScanner:
             return cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
 
         if mode == 'scanner':
-            # 扫描仪效果 - 背景纯白，文字清晰黑白分明
+            # 扫描仪效果 - 保持原图清晰度，只做增强
             h, w = image.shape[:2]
 
-            # 1. 转灰度
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            # 1. 转LAB空间处理亮度
+            lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+            l, a, b = cv2.split(lab)
 
-            # 2. 大津法二值化 - 这是最接近扫描仪效果的
-            _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+            # 2. CLAHE增强对比度
+            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+            l_enhanced = clahe.apply(l)
 
-            # 3. 彩色区域检测（印章等）
-            hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-            saturation = hsv[:, :, 1]
-            hue = hsv[:, :, 0]
+            # 3. 背景提白、文字加深
+            l_float = l_enhanced.astype(np.float32)
+            # 亮区变白
+            l_float[l_float > 180] = 255
+            # 暗区加深
+            l_float[l_float < 80] *= 0.6
 
-            # 红色印章
-            is_red = ((hue < 15) | (hue > 165)) & (saturation > 50)
-            # 其他彩色
-            is_colorful = saturation > 80
-            is_color = is_red | is_colorful
+            l_result = np.clip(l_float, 0, 255).astype(np.uint8)
 
-            # 4. 创建结果 - 二值图转彩色
-            result = cv2.cvtColor(binary, cv2.COLOR_GRAY2BGR)
-
-            # 5. 彩色区域保留原色
-            if np.any(is_color):
-                result[is_color] = image[is_color]
+            # 4. 合并输出
+            lab_result = cv2.merge([l_result, a, b])
+            result = cv2.cvtColor(lab_result, cv2.COLOR_LAB2BGR)
 
             return result
 

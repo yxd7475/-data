@@ -136,14 +136,18 @@ def scan_document():
         if image is None:
             return jsonify({'error': 'Failed to decode image'}), 400
 
+        print(f"输入图片尺寸: {image.shape}")
+
         # 检测边界
         corners = scanner.detect_document(image)
 
         if corners is not None:
             # 裁剪
             cropped = scanner.four_point_transform(image, corners)
+            print(f"裁剪后尺寸: {cropped.shape}")
             # 应用滤镜
             enhanced = scanner.enhance_document(cropped, enhance_mode)
+            print(f"增强后尺寸: {enhanced.shape}")
 
             # 返回裁剪后的原图和滤镜结果
             cropped_base64 = image_to_base64(cropped)
