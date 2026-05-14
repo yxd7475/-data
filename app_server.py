@@ -136,12 +136,15 @@ def scan_document():
         if image is None:
             return jsonify({'error': 'Failed to decode image'}), 400
 
+        print(f"===== 扫描请求 =====")
         print(f"输入图片尺寸: {image.shape}")
+        print(f"滤镜模式: {enhance_mode}")
 
         # 检测边界
         corners = scanner.detect_document(image)
 
         if corners is not None:
+            print(f"检测到边界: {corners}")
             # 裁剪
             cropped = scanner.four_point_transform(image, corners)
             print(f"裁剪后尺寸: {cropped.shape}")
@@ -153,13 +156,21 @@ def scan_document():
             cropped_base64 = image_to_base64(cropped)
             result_base64 = image_to_base64(enhanced)
 
+            print(f"返回图片base64长度: {len(result_base64)}")
+            print(f"=====================")
+
             return jsonify({
                 'success': True,
                 'image': result_base64,
                 'cropped': cropped_base64,
-                'detected': True
+                'detected': True,
+                'debug': {
+                    'input_size': f"{image.shape[1]}x{image.shape[0]}",
+                    'output_size': f"{enhanced.shape[1]}x{enhanced.shape[0]}"
+                }
             })
         else:
+            print("未检测到边界")
             # 未检测到边界，只应用滤镜
             enhanced = scanner.enhance_document(image, enhance_mode)
             result_base64 = image_to_base64(enhanced)
@@ -168,7 +179,11 @@ def scan_document():
                 'success': True,
                 'image': result_base64,
                 'cropped': result_base64,
-                'detected': False
+                'detected': False,
+                'debug': {
+                    'input_size': f"{image.shape[1]}x{image.shape[0]}",
+                    'output_size': f"{enhanced.shape[1]}x{enhanced.shape[0]}"
+                }
             })
 
     except Exception as e:
