@@ -46,7 +46,16 @@ Page({
       sizeType: ['original'],  // 选择原图
       sourceType: ['album'],
       success: (res) => {
-        this.processImage(res.tempFiles[0].tempFilePath)
+        const file = res.tempFiles[0]
+        console.log('相册图片尺寸:', file.width, 'x', file.height, '大小:', file.size)
+        // 获取更详细的图片信息
+        wx.getImageInfo({
+          src: file.tempFilePath,
+          success: (info) => {
+            console.log('相册图片详情:', info.width, 'x', info.height)
+          }
+        })
+        this.processImage(file.tempFilePath)
       }
     })
   },
@@ -63,7 +72,11 @@ Page({
         wx.getImageInfo({
           src: res.tempImagePath,
           success: (info) => {
-            console.log('图片尺寸:', info.width, 'x', info.height)
+            console.log('原图尺寸:', info.width, 'x', info.height)
+            // 如果图片太小，提示用户
+            if (info.width < 2000) {
+              console.warn('图片分辨率较低，可能影响扫描效果')
+            }
           }
         })
         this.processImage(res.tempImagePath)
