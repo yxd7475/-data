@@ -93,10 +93,21 @@ Page({
     this.setData({ loadingText: '正在扫描...' })
 
     try {
-      // 不压缩，直接用原图
-      const base64 = await this.imageToBase64(imagePath)
+      // 先获取图片信息，打印原始尺寸
+      const imageInfo = await new Promise((resolve, reject) => {
+        wx.getImageInfo({
+          src: imagePath,
+          success: resolve,
+          fail: reject
+        })
+      })
+      console.log('========== 图片信息 ==========')
+      console.log('原始尺寸:', imageInfo.width, 'x', imageInfo.height)
+      console.log('==============================')
 
-      console.log('图片base64长度:', base64.length)
+      // 转换为base64
+      const base64 = await this.imageToBase64(imagePath)
+      console.log('base64长度:', base64.length)
 
       const result = await this.callScanAPI(base64)
 
@@ -138,13 +149,26 @@ Page({
 
   imageToBase64(imagePath) {
     return new Promise((resolve, reject) => {
+      // 先获取图片信息
+      wx.getImageInfo({
+        src: imagePath,
+        success: (info) => {
+          console.log('imageToBase64 原始图片尺寸:', info.width, 'x', info.height)
+        }
+      })
+
+      // 读取文件
       wx.getFileSystemManager().readFile({
         filePath: imagePath,
         encoding: 'base64',
         success: (res) => {
+          console.log('读取文件成功, base64长度:', res.data.length)
           resolve('data:image/jpeg;base64,' + res.data)
         },
-        fail: reject
+        fail: (err) => {
+          console.error('读取文件失败:', err)
+          reject(err)
+        }
       })
     })
   },
