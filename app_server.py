@@ -64,9 +64,21 @@ def base64_to_image(base64_str):
         else:
             print(f"解码后图片尺寸: {image.shape}")
 
+            # 如果图片太大，缩小到合理尺寸（防止内存溢出）
+            h, w = image.shape[:2]
+            max_size = 2000
+            if max(h, w) > max_size:
+                scale = max_size / max(h, w)
+                new_w = int(w * scale)
+                new_h = int(h * scale)
+                print(f"图片过大，缩小到: {new_w}x{new_h}")
+                image = cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_AREA)
+
         return image
     except Exception as e:
         print(f"base64_to_image 错误: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 
