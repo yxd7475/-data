@@ -1,6 +1,11 @@
 // app.js
 App({
   onLaunch() {
+    // 开启调试模式，真机可查看日志
+    wx.setEnableDebug({
+      enableDebug: true
+    })
+
     // 初始化云开发
     if (!wx.cloud) {
       console.error('请使用 2.2.3 或以上的基础库以使用云能力')
@@ -17,6 +22,11 @@ App({
     this.globalData.statusBarHeight = systemInfo.statusBarHeight
     this.globalData.screenWidth = systemInfo.screenWidth
     this.globalData.screenHeight = systemInfo.screenHeight
+
+    console.log('========== 系统信息 ==========')
+    console.log('设备型号:', systemInfo.model)
+    console.log('屏幕尺寸:', systemInfo.screenWidth, 'x', systemInfo.screenHeight)
+    console.log('==============================')
   },
 
   globalData: {
