@@ -153,7 +153,12 @@ Page({
       wx.getImageInfo({
         src: imagePath,
         success: (info) => {
-          console.log('imageToBase64 原始图片尺寸:', info.width, 'x', info.height)
+          console.log('========== 图片处理流程 ==========')
+          console.log('第1步 - 原始图片尺寸:', info.width, 'x', info.height)
+          console.log('第1步 - 图片路径:', imagePath)
+        },
+        fail: (err) => {
+          console.error('获取图片信息失败:', err)
         }
       })
 
@@ -162,8 +167,11 @@ Page({
         filePath: imagePath,
         encoding: 'base64',
         success: (res) => {
-          console.log('读取文件成功, base64长度:', res.data.length)
-          resolve('data:image/jpeg;base64,' + res.data)
+          console.log('第2步 - base64长度:', res.data.length)
+          console.log('第2步 - 预估图片大小:', Math.round(res.data.length * 0.75 / 1024), 'KB')
+          const fullBase64 = 'data:image/jpeg;base64,' + res.data
+          console.log('第2步 - 完整base64长度:', fullBase64.length)
+          resolve(fullBase64)
         },
         fail: (err) => {
           console.error('读取文件失败:', err)
@@ -177,7 +185,7 @@ Page({
     return new Promise((resolve, reject) => {
       this.setData({ loadingText: '上传中...' })
 
-      console.log('发送请求, base64长度:', imageBase64.length)
+      console.log('第3步 - 发送到服务器, base64长度:', imageBase64.length)
 
       wx.request({
         url: `${SERVER_URL}/api/scan`,
@@ -191,7 +199,15 @@ Page({
         },
         timeout: 180000,  // 3分钟超时
         success: (res) => {
-          console.log('服务器响应状态码:', res.statusCode)
+          console.log('第4步 - 服务器响应状态码:', res.statusCode)
+          if (res.data.debug) {
+            console.log('第4步 - 服务器收到的尺寸:', res.data.debug.input_size)
+            console.log('第4步 - 服务器输出的尺寸:', res.data.debug.output_size)
+          }
+          if (res.data.image) {
+            console.log('第4步 - 返回图片base64长度:', res.data.image.length)
+          }
+          console.log('===================================')
           if (res.statusCode === 200) {
             resolve(res.data)
           } else {
