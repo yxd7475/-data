@@ -153,6 +153,8 @@ Page({
     return new Promise((resolve, reject) => {
       this.setData({ loadingText: '上传中...' })
 
+      console.log('发送请求, base64长度:', imageBase64.length)
+
       wx.request({
         url: `${SERVER_URL}/api/scan`,
         method: 'POST',
@@ -163,8 +165,9 @@ Page({
         header: {
           'content-type': 'application/json'
         },
-        timeout: 120000,  // 2分钟超时
+        timeout: 180000,  // 3分钟超时
         success: (res) => {
+          console.log('服务器响应状态码:', res.statusCode)
           if (res.statusCode === 200) {
             resolve(res.data)
           } else {

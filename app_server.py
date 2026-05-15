@@ -37,6 +37,8 @@ def base64_to_image(base64_str):
             print("错误: base64字符串为空")
             return None
 
+        print(f"收到base64长度: {len(base64_str)}")
+
         # 移除 data:image/jpeg;base64, 前缀
         if ',' in base64_str:
             base64_str = base64_str.split(',')[1]
@@ -44,8 +46,11 @@ def base64_to_image(base64_str):
         # 移除可能的空白字符
         base64_str = base64_str.strip()
 
+        print(f"去除前缀后base64长度: {len(base64_str)}")
+
         # 解码
         img_data = base64.b64decode(base64_str)
+        print(f"解码后字节数: {len(img_data)}")
 
         if len(img_data) == 0:
             print("错误: 解码后的图像数据为空")
@@ -56,6 +61,8 @@ def base64_to_image(base64_str):
 
         if image is None:
             print("错误: cv2.imdecode 返回 None")
+        else:
+            print(f"解码后图片尺寸: {image.shape}")
 
         return image
     except Exception as e:
